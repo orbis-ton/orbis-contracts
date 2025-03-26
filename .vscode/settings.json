@@ -1,0 +1,18 @@
+
+{
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 1000,
+  "editor.formatOnSave": true,
+  "editor.minimap.enabled": false,
+  "editor.wordWrap": "on",
+  "editor.renderWhitespace": "all",
+  "editor.rulers": [160],
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true
+  },
+  "tact.inspections.disabled": [
+    "struct-initialization"
+],
+}
