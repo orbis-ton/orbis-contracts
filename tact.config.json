@@ -1,0 +1,14 @@
+{
+    "projects": [{
+        "name": "orbis",
+        "path": "./src/giver.tact",
+        "output": "./src/output",
+        "options": {
+            "external": false,  
+            "debug": false,
+            "optimizations": {
+                "internalExternalReceiversOutsideMethodsMap": false
+            }
+        }
+    }]
+}

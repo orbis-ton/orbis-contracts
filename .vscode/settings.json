@@ -10,7 +10,7 @@
   "editor.renderWhitespace": "all",
   "editor.rulers": [160],
   "editor.codeActionsOnSave": {
-    "source.fixAll": true
+    "source.fixAll": "explicit"
   },
   "tact.inspections.disabled": [
     "struct-initialization"
