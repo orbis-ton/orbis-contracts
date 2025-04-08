@@ -5,7 +5,7 @@ import { Address, beginCell, Cell, Dictionary, OpenedContract, TonClient, Wallet
 import * as dotenv from "dotenv";
 
 dotenv.config();
-const TESTNET = process.env.TESTNET === "false";
+const TESTNET = process.env.TESTNET === "true";
 console.log(`Testnet mode: ${TESTNET}`);
 
 const ONCHAIN_CONTENT_PREFIX = 0x00
