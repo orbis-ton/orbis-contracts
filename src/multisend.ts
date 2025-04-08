@@ -169,19 +169,26 @@ async function calcDistributionTable(holders: Record<string, number>, balance: b
   const table = await calcDistributionTable(holders, balance);
   const minTonAmount = GAS_PER_TRANSFER * BigInt(table.size);
 
-  // if (tonBalance < minTonAmount) {
-  //   console.log('Not enough TON balance to distribute, need ', fromNano(minTonAmount), 'TON');
-  //   return;
-  // }
+  if (tonBalance < minTonAmount) {
+    console.log('Not enough TON balance to distribute, need ', fromNano(minTonAmount), 'TON');
+    return;
+  }
 
   const totalNftCount = Object.values(holders).reduce((acc, count) => acc + count, 0);
   if (balance < totalNftCount * 100) {
     console.log('There are less than 100 ORBC per NFT, lets distribute the rest manually');
   }
 
-  // console.log('Holders: ', JSON.stringify(holders, null, 2));
-  // console.log(
-  //   'Distribution Table: ',
-  //   JSON.stringify(Object.fromEntries([...table.entries()].map(([k, v]) => [k, v.toString()])), null, 2)
-  // );
+  console.log('Holders: ', JSON.stringify(holders, null, 2));
+  console.log(
+    'Distribution Table: ',
+    JSON.stringify(Object.fromEntries([...table.entries()].map(([k, v]) => [k, v.toString()])), null, 2)
+  );
+
+  const finalSendList = new Map([...table.entries()].map(([k, v]) => [Address.parse(k), v]));
+  await sendBatches(wallet, secretKey, jettonMasterAddress, finalSendList, 100);
+
+  // TODO: wait and verify that all transfers are sent
+
+  await saveLastDistributionTime(wallet, secretKey, giver, nextDistributionTime);
 })();
