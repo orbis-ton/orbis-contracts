@@ -10,5 +10,40 @@
                 "internalExternalReceiversOutsideMethodsMap": false
             }
         }
+    }, {
+        "name": "orbis",
+        "path": "./src/NFTCollection.tact",
+        "output": "./src/output",
+        "options": {
+            "external": false,
+            "debug": false,
+            "optimizations": {
+                "internalExternalReceiversOutsideMethodsMap": false
+            }
+        }
+    },
+    {
+        "name": "orb",
+        "path": "./src/NFT.tact",
+        "output": "./src/output",
+        "options": {
+            "external": false,
+            "debug": true,
+            "optimizations": {
+                "internalExternalReceiversOutsideMethodsMap": false
+            }
+        }
+    },
+    {
+        "name": "orb",
+        "path": "./src/exchanger.tact",
+        "output": "./src/output",
+        "options": {
+            "external": false,
+            "debug": true,
+            "optimizations": {
+                "internalExternalReceiversOutsideMethodsMap": false
+            }
+        }
     }]
 }

@@ -13,25 +13,26 @@ import {
 } from '@ton/ton';
 import { OMGiver, SetParameters, storeInitDistributionMap, storeInitJettonWallet } from './output/orbis_OMGiver';
 import { JettonMinter } from './JettonMinter';
-import { client, createClient, delay, keyPairFromEnv, openWalletV5, waitForDeployment } from './common';
+import { createClient, delay, keyPairFromEnv, openWalletV5, waitForDeployment } from './common';
 import { NftCollectionTemplate } from './output/orbis_NftCollectionTemplate';
 import { JettonWallet } from './JettonWallet';
 import { text } from '@clack/prompts';
 
-async function calcGiverAddress(nftCollectionAddress: Address, nextItemIndex: bigint) {
+async function calcAddress(nftCollectionAddress: Address, nextItemIndex: bigint) {
   let init = await OMGiver.init(BigInt(1), nftCollectionAddress, nextItemIndex);
   return contractAddress(0, init);
 }
 
-async function deployGiver(
+async function deployContract(
   wallet: OpenedContract<WalletContractV5R1>,
   secretKey: Buffer,
   deployAmount: bigint,
   nftCollection: OpenedContract<NftCollectionTemplate>,
   giverJettonWalletAddress: Address,
-  jwBalance: bigint,
-  nextItemIndex: bigint
+  jwBalance: bigint
 ) {
+  const nextItemIndex = (await nftCollection.getGetCollectionData()).nextItemIndex;
+  console.log('Next item index: ', nextItemIndex);
   let init = await OMGiver.init(BigInt(1), nftCollection.address, nextItemIndex);
   let address = contractAddress(0, init);
 
@@ -80,45 +81,47 @@ async function changeCollectionOwner(
   });
 }
 
+async function changeGiverParameters(
+  client: TonClient,
+  wallet: OpenedContract<WalletContractV5R1>,
+  secretKey: Buffer,
+  giverAddress: Address,
+  parameters: SetParameters
+) {
+  const giver = client.open(OMGiver.fromAddress(giverAddress));
+  await giver.send(
+    wallet.sender(secretKey),
+    {
+      value: toNano('0.1'),
+      bounce: true,
+    },
+    parameters
+  );
+}
 
 (async () => {
-  const wallet = await openWalletV5('distribution');
+  const client = createClient();
+  const wallet = await openWalletV5(client, 'distribution');
   const secretKey = (await keyPairFromEnv('distribution')).secretKey;
-
-  const collOwner = await openWalletV5('collection');
+  const collOwner = await openWalletV5(client, 'collection');
   const collOwnerSK = (await keyPairFromEnv('collection')).secretKey;
   console.log('Wallet address: ', wallet.address);
-
-  const jettonMasterAddress = Address.parse('EQBe0QNN5u45TL8h1QHZUOxl69QhoJLMyhQzjCenxxL2ZInd');
-  const nftCollectionAddress = Address.parse('EQCTyTzHbndt6ZYpZAyf6rZav2sG4KRuU6iw-F95nAnOzJEB');
-  let deployAmount = toNano('2');
-  let deployedAddress;
 
   let balance: bigint = await wallet.getBalance();
   console.log('Current deployment wallet balance: ', fromNano(balance).toString(), '💎TON');
 
-  const nftCollection = client.open(NftCollectionTemplate.fromAddress(nftCollectionAddress));
-  const nextItemIndex = (await nftCollection.getGetCollectionData()).nextItemIndex;
-  deployedAddress = await calcGiverAddress(nftCollectionAddress, nextItemIndex);
+  const giverAddress = Address.parse('EQD903ZwzXzOsmVCBw_zlYje0NwKIfvffc9Nlb2ZcynGJc5v');
+  const giver = client.open(OMGiver.fromAddress(giverAddress));
+  console.log(await giver.getGetGiverData());
 
-  await text({
-    message: `Please send tokens to the giver address and press enter: ${deployedAddress.toString()}`,
+  await text({ message: 'doublecheck and press enter' });
+  await changeGiverParameters(client, wallet, secretKey, giver.address, {
+    newCollectionAddress: null,
+    newPriceInTokens: toNano('10000'),
+    lastRewardDistribution: null,
+    $$type: 'SetParameters',
   });
-  const itemIndex = 367n;
 
-  const jettonMaster = client.open(JettonMinter.fromAddress(jettonMasterAddress));
-  const giverJettonWalletAddress = await jettonMaster.getGetWalletAddress(deployedAddress);
-  const jettonWallet = client.open(JettonWallet.fromAddress(giverJettonWalletAddress));
-  const jwBalance = (await jettonWallet.getGetWalletData()).balance;
-  console.log('Giver jetton wallet address and balance: ', giverJettonWalletAddress, jwBalance);
-
-  deployedAddress = await deployGiver(wallet, secretKey, deployAmount, nftCollection, giverJettonWalletAddress, jwBalance, itemIndex);
-  await waitForDeployment(deployedAddress);
   await delay(10000);
-
-  await changeCollectionOwner(collOwner, collOwnerSK, nftCollectionAddress, deployedAddress);
-  await delay(10000);
-
-  const giver = client.open(OMGiver.fromAddress(deployedAddress));
   console.log(await giver.getGetGiverData());
 })();

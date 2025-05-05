@@ -96,6 +96,7 @@ async function saveLastDistributionTime(
       newCollectionAddress: null,
       newPriceInTokens: null,
       newReserveOwnerAddress: null,
+      nextItemIndex: null,
     }
   );
 }
@@ -139,16 +140,20 @@ async function calcDistributionTable(holders: Record<string, number>, balance: b
 
 (async () => {
   const client = createClient();
-  const wallet = await openWalletV5(client);
-  const secretKey = (await keyPairFromEnv()).secretKey;
+  const wallet = await openWalletV5(client, 'distribution');
+  const secretKey = (await keyPairFromEnv('distribution')).secretKey;
 
-  const giverAddress = Address.parse('EQCGBNeuMuS69Nui_ZbpTyz0Ox4_o-oVAZGnEuG8uANNd5h9');
-  const jettonMasterAddress = Address.parse('EQB89FTAizozyZ6WYCAF9yxG-0oQYdS87dxSfrC34oCyP5X0');
-  const collectionAddress = Address.parse('EQCsw_i-GG-LfuJjNlqnGlaziQV8Z-QcgDD5Amk8vDRZpxen');
+  const giverOwner = await openWalletV5(client, 'giver');
+  const giverSK = (await keyPairFromEnv('giver')).secretKey;
+
+  const giverAddress = Address.parse('EQAW7IqjTJb1rGsz-DeDREuWVMQcyGdHwxr0RcvlxhlEUZXu');
+  const jettonMasterAddress = Address.parse('EQCnd2iL1tm6qC89gPKJFEgUMzC0k62X7IdadVgl8eqplhWL');
+  const collectionAddress = Address.parse('EQBrhTxvfDrGI6Gd3ERvb3fwwtJ9yrMsDPEX1ZXduUf0f-RF');
 
   const giver = client.open(OMGiver.fromAddress(giverAddress));
   const jettonMaster = client.open(JettonMinter.fromAddress(jettonMasterAddress));
 
+  const jettonWalletAddress = await jettonMaster.getGetWalletAddress(wallet.address);
   const balance = await getJettonBalance(client, wallet.address, jettonMaster);
   const tonBalance = await wallet.getBalance();
 
@@ -165,7 +170,7 @@ async function calcDistributionTable(holders: Record<string, number>, balance: b
     return;
   }
 
-  const holders = await getOMHolderList(Address.parse('EQAPpJOA7BJPDJw9d7Oy7roElafFzsIkjaPoKPe9nmNBKaOZ'));
+  const holders = await getOMHolderList(collectionAddress);
   const table = await calcDistributionTable(holders, balance);
   const minTonAmount = GAS_PER_TRANSFER * BigInt(table.size);
 
@@ -175,8 +180,8 @@ async function calcDistributionTable(holders: Record<string, number>, balance: b
   }
 
   const totalNftCount = Object.values(holders).reduce((acc, count) => acc + count, 0);
-  if (balance < totalNftCount * 100) {
-    console.log('There are less than 100 ORBC per NFT, lets distribute the rest manually');
+  if (balance < totalNftCount * 1) {
+    console.log('There are less than 1 ORBC per NFT, lets distribute the rest manually');
   }
 
   console.log('Holders: ', JSON.stringify(holders, null, 2));
@@ -186,9 +191,10 @@ async function calcDistributionTable(holders: Record<string, number>, balance: b
   );
 
   const finalSendList = new Map([...table.entries()].map(([k, v]) => [Address.parse(k), v]));
-  await sendBatches(wallet, secretKey, jettonMasterAddress, finalSendList, 100);
+  await sendBatches(wallet, secretKey, jettonWalletAddress, finalSendList, 100);
 
   // TODO: wait and verify that all transfers are sent
 
-  await saveLastDistributionTime(wallet, secretKey, giver, nextDistributionTime);
+  await saveLastDistributionTime(giverOwner, giverSK, giver, nextDistributionTime);
+  await delay(10000);
 })();

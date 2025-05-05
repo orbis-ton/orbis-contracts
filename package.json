@@ -3,13 +3,18 @@
   "scripts": {
     "build": "tact --config ./tact.config.json",
     "test": "jest",
+    "collection_deploy": "ts-node ./src/collection.deploy.ts",
+    "collection_mint": "ts-node ./src/collection.mint.ts",
     "giver_deploy": "ts-node ./src/giver.deploy.ts",
+    "giver_calc": "ts-node ./src/giver.calc.ts",
     "giver_withdraw": "ts-node ./src/giver.withdraw.ts",
-    "jetton_transfer": "ts-node ./src/jetton.transfer.ts",
+    "giver_params": "ts-node ./src/giver.params.ts",
+    "exchanger_deploy": "ts-node ./src/exchanger.deploy.ts",
     "multisend": "ts-node ./src/multisend.ts"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
+    "@clack/prompts": "^0.10.1",
     "@orbs-network/ton-access": "^2.2.2",
     "@tact-lang/compiler": "^1.6.4",
     "@tact-lang/coverage": "^0.0.8",

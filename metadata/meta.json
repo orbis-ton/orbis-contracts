@@ -1,0 +1,10 @@
+{
+  "name": "OM NFT",
+  "description": "ORBIS Mining (OM NFT) is a weekly distribution of ORBcoin (ORB) at a rate of 0.314% of the remaining ORB on the smart contract, divided by the number of generated OM NFTs.",
+  "image": "https://orbis.money/storage/style/coinLogo4.jpg",
+  "cover_image": "https://orbis.money/storage/style/coinLogo5.jpg",
+  "social_links": [
+    "https://orbis.money"
+  ],
+  "marketplace": "getgems.io"
+}
